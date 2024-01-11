@@ -44,14 +44,14 @@ class ModuleTest(parameterized.TestCase):
     self.assertEqual(mod2.module_name, "empty_module_1")
 
   @test_utils.transform_and_run
-  def test_module_naming_custom(self):
+  def test_custom_module_naming(self):
     mod1 = EmptyModule(name="custom_name")
     mod2 = EmptyModule(name="custom_name")
     self.assertEqual(mod1.module_name, "custom_name")
     self.assertEqual(mod2.module_name, "custom_name_1")
 
   @test_utils.transform_and_run
-  def test_supports_arg_named_module(self):
+  def test_supports_argument_named_module(self):
 
     class MyModule(module.Module):
 
@@ -63,14 +63,14 @@ class ModuleTest(parameterized.TestCase):
 
   @parameterized.parameters(1, 2, 3)
   @test_utils.transform_and_run
-  def test_module_naming_explicit_numbering(self, step):
+  def test_explicit_module_naming_numbering(self, step):
     for n in range(0, step * 10, step):
       module_name = f"custom_name_{n}"
       self.assertEqual(EmptyModule(name=module_name).module_name, module_name)
 
   @parameterized.parameters(1, 2, 3)
   @test_utils.transform_and_run
-  def test_module_naming_explicit_reverse_numbering(self, step):
+  def test_explicit_module_naming_reverse_numbering(self, step):
     total = step * 10
     for n in range(0, total, step):
       n = total - n
@@ -81,7 +81,7 @@ class ModuleTest(parameterized.TestCase):
                      f"custom_name_{total + 1}")
 
   @test_utils.transform_and_run
-  def test_module_naming_explicit_numbering_collision(self):
+  def test_explicit_module_naming_collision_numbering(self):
     self.assertEqual(EmptyModule(name="custom_name").module_name, "custom_name")
     self.assertEqual(EmptyModule(name="custom_name").module_name,
                      "custom_name_1")
@@ -90,7 +90,7 @@ class ModuleTest(parameterized.TestCase):
       EmptyModule(name="custom_name_1")
 
   @test_utils.transform_and_run
-  def test_module_naming_explicit_numbering_out_of_order(self):
+  def test_explicit_module_naming_out_of_order_numbering(self):
     for n in (1, 3, 2, 4):
       self.assertEqual(
           EmptyModule(name=f"custom_name_{n}").module_name, f"custom_name_{n}")
@@ -99,7 +99,7 @@ class ModuleTest(parameterized.TestCase):
       EmptyModule(name="custom_name_4")
 
   @test_utils.transform_and_run
-  def test_module_naming_explicit_numbering_zero_padded(self):
+  def test_explicit_module_naming_zero_padded_numbering(self):
     self.assertEqual(
         EmptyModule(name="custom_name_000").module_name, "custom_name_000")
     self.assertEqual(
@@ -110,7 +110,7 @@ class ModuleTest(parameterized.TestCase):
         EmptyModule(name="custom_name_007").module_name, "custom_name_007")
 
   @test_utils.transform_and_run
-  def test_module_naming_explicit_numbering_zero_padded_reuse(self):
+  def test_explicit_module_naming_padded_reuse_numbering(self):
     self.assertEqual(
         EmptyModule(name="custom_name_007").module_name, "custom_name_007")
     self.assertEqual(
@@ -125,19 +125,19 @@ class ModuleTest(parameterized.TestCase):
     self.assertIsNot(m1(), m2())  # No parameter sharing.
 
   @test_utils.transform_and_run
-  def test_flatten_invalid_name(self):
+  def test_flatten_invalid_module_name(self):
     with self.assertRaisesRegex(ValueError, "is not a valid module name"):
       EmptyModule(name="1bad-name")
 
   @test_utils.transform_and_run
-  def test_parameter_reuse(self):
+  def test_parameter_reuse_for_modules(self):
     mod = ScalarModule()
     w1 = mod()
     w2 = mod()
     self.assertIs(w1, w2)
 
   @test_utils.transform_and_run
-  def test_multiple_forward_methods(self):
+  def test_different_forward_methods(self):
     mod = MultipleForwardMethods(name="outer")
     mod()
     self.assertEqual(mod.ctor_mod.module_name, "outer/~/scalar_module")
@@ -162,7 +162,7 @@ class ModuleTest(parameterized.TestCase):
     params = init_fn(None)
     self.assertEqual(params, {"scalar_module": {"w": jnp.zeros([])}})
 
-  def test_params_nested(self):
+  def test_nested_params_for_module(self):
     init_fn, _ = transform.transform(
         lambda: MultipleForwardMethods(name="outer")())  # pylint: disable=unnecessary-lambda
     params = init_fn(None)
@@ -172,7 +172,7 @@ class ModuleTest(parameterized.TestCase):
                       "outer/~encode/scalar_module": {"w": jnp.zeros([])},
                       "outer/~decode/scalar_module": {"w": jnp.zeros([])}})
 
-  def test_used_inside_transform(self):
+  def test_verify_usage_inside_transform(self):
     name_log = []
     module_log = []
 
@@ -293,7 +293,7 @@ class ModuleTest(parameterized.TestCase):
     self.assertEqual(params, {"scalar_module": {"w": jnp.zeros([])}})
 
   @test_utils.transform_and_run
-  def test_method_hook(self):
+  def test_nested_method_hook(self):
     events = []
     @contextlib.contextmanager
     def method_hook(mod, method_name):
@@ -592,7 +592,7 @@ class ModuleTest(parameterized.TestCase):
     self.assertFalse(getattr(ProtocolModule, "_is_protocol"))
 
   @test_utils.transform_and_run
-  def test_instance_checks(self):
+  def test_explicit_numbering_and_zero_padding(self):
     self.assertIsInstance(ConcreteProtocolModule(), module.Module)
     self.assertIsInstance(ConcreteProtocolModule(), SupportsFoo)
     self.assertIsInstance(ConcreteProtocolModule(), ProtocolModule)
@@ -614,7 +614,7 @@ class ModuleTest(parameterized.TestCase):
     self.assertEqual(m.call_module.module_name, "parent/child")
 
   @test_utils.transform_and_run
-  def test_name_like_aliasing(self):
+  def test_additional_module_naming_cases(self):
     m = ModuleWithDoubleCall(name="parent")
     m()
     self.assertEqual(m.foo_module.module_name, "parent/child")  # pytype: disable=attribute-error
